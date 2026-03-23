@@ -4,6 +4,13 @@
 
 ML-powered manga translator, written in **Rust**.
 
+> [!WARNING]
+> **This is not the main project.**
+> Please check the [original main repository by **mayocream**](https://github.com/mayocream/koharu)!
+> This fork exists because I want to introduce some changes that may be helpful to some local macOS users like myself.
+>
+> If you want to see the differences, check [docs/jerieljan-changelog.md](docs/jerieljan-changelog.md)
+
 Koharu introduces a new workflow for manga translation, utilizing the power of ML to automate the process. It combines the capabilities of object detection, OCR, inpainting, and LLMs to create a seamless translation experience.
 
 Under the hood, Koharu uses [candle](https://github.com/huggingface/candle) for high-performance inference, and uses [Tauri](https://github.com/tauri-apps/tauri) for the GUI. All components are written in Rust, ensuring safety and speed.
