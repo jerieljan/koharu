@@ -642,6 +642,78 @@ export const useDocumentMutations = () => {
     }
   }, [clearProgress])
 
+  const batchDetectAndOcr = useCallback(async () => {
+    const { totalPages } = useEditorUiStore.getState()
+    const { startOperation, finishOperation } = useOperationStore.getState()
+    if (!totalPages) return
+    startOperation({
+      type: 'process-all',
+      cancellable: true,
+      current: 0,
+      total: totalPages,
+    })
+    try {
+      for (let i = 0; i < totalPages; i++) {
+        await detect(undefined, i)
+        await ocr(undefined, i)
+      }
+    } finally {
+      finishOperation()
+      await clearProgress()
+    }
+  }, [clearProgress, detect, ocr])
+
+  const batchGenerate = useCallback(async () => {
+    const { totalPages } = useEditorUiStore.getState()
+    const { selectedModel, selectedLanguage } = useLlmUiStore.getState()
+    const { startOperation, finishOperation } = useOperationStore.getState()
+    if (!totalPages) return
+    startOperation({
+      type: 'process-all',
+      cancellable: true,
+      current: 0,
+      total: totalPages,
+    })
+    try {
+      const models = getCachedLlmModels(queryClient)
+      const languages = findModelLanguages(models, selectedModel)
+      const language =
+        languages.length > 0
+          ? selectedLanguage && languages.includes(selectedLanguage)
+            ? selectedLanguage
+            : languages[0]
+          : undefined
+      for (let i = 0; i < totalPages; i++) {
+        await api.llmGenerate(i, undefined, language)
+        await invalidateCurrentDocument(queryClient, i)
+      }
+    } finally {
+      finishOperation()
+      await clearProgress()
+    }
+  }, [clearProgress, queryClient])
+
+  const batchInpaintAndRender = useCallback(async () => {
+    const { totalPages } = useEditorUiStore.getState()
+    const { startOperation, finishOperation } = useOperationStore.getState()
+    if (!totalPages) return
+    startOperation({
+      type: 'process-all',
+      cancellable: true,
+      current: 0,
+      total: totalPages,
+    })
+    try {
+      for (let i = 0; i < totalPages; i++) {
+        await inpaint(undefined, i)
+        await render(undefined, i)
+      }
+    } finally {
+      finishOperation()
+      await clearProgress()
+    }
+  }, [clearProgress, inpaint, render])
+
   const exportDocument = useCallback(async () => {
     const { currentDocumentIndex } = useEditorUiStore.getState()
     await api.exportDocument(currentDocumentIndex)
@@ -679,6 +751,9 @@ export const useDocumentMutations = () => {
     processImage,
     processAllImages,
     inpaintAndRenderImage,
+    batchDetectAndOcr,
+    batchGenerate,
+    batchInpaintAndRender,
     exportDocument,
     exportPsdDocument,
     exportAllInpainted,
