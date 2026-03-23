@@ -13,6 +13,9 @@ import {
   MenubarItem,
   MenubarMenu,
   MenubarSeparator,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
   MenubarTrigger,
 } from '@/components/ui/menubar'
 import { useDocumentMutations } from '@/lib/query/mutations'
@@ -22,6 +25,7 @@ type MenuItem = {
   onSelect?: () => void | Promise<void>
   disabled?: boolean
   testId?: string
+  items?: MenuItem[]
 }
 
 type MenuSection = {
@@ -41,6 +45,9 @@ export function MenuBar() {
     processImage,
     inpaintAndRenderImage,
     processAllImages,
+    batchDetectAndOcr,
+    batchGenerate,
+    batchInpaintAndRender,
     exportDocument,
     exportPsdDocument,
     exportAllInpainted,
@@ -116,6 +123,26 @@ export function MenuBar() {
           label: t('menu.processAll'),
           onSelect: processAllImages,
           testId: 'menu-process-all',
+        },
+        {
+          label: t('menu.batch'),
+          items: [
+            {
+              label: t('menu.batchDetectOcr'),
+              onSelect: batchDetectAndOcr,
+              testId: 'menu-batch-detect-ocr',
+            },
+            {
+              label: t('menu.batchGenerate'),
+              onSelect: batchGenerate,
+              testId: 'menu-batch-generate',
+            },
+            {
+              label: t('menu.batchInpaintRender'),
+              onSelect: batchInpaintAndRender,
+              testId: 'menu-batch-inpaint-render',
+            },
+          ],
         },
       ],
     },
@@ -205,23 +232,50 @@ export function MenuBar() {
               sideOffset={5}
               alignOffset={-3}
             >
-              {items.map((item) => (
-                <MenubarItem
-                  key={item.label}
-                  data-testid={item.testId}
-                  className='text-[13px]'
-                  disabled={item.disabled}
-                  onSelect={
-                    item.onSelect
-                      ? () => {
-                          void item.onSelect?.()
-                        }
-                      : undefined
-                  }
-                >
-                  {item.label}
-                </MenubarItem>
-              ))}
+              {items.map((item) =>
+                item.items ? (
+                  <MenubarSub key={item.label}>
+                    <MenubarSubTrigger className='text-[13px]'>
+                      {item.label}
+                    </MenubarSubTrigger>
+                    <MenubarSubContent className='min-w-36'>
+                      {item.items.map((subItem) => (
+                        <MenubarItem
+                          key={subItem.label}
+                          data-testid={subItem.testId}
+                          className='text-[13px]'
+                          disabled={subItem.disabled}
+                          onSelect={
+                            subItem.onSelect
+                              ? () => {
+                                  void subItem.onSelect?.()
+                                }
+                              : undefined
+                          }
+                        >
+                          {subItem.label}
+                        </MenubarItem>
+                      ))}
+                    </MenubarSubContent>
+                  </MenubarSub>
+                ) : (
+                  <MenubarItem
+                    key={item.label}
+                    data-testid={item.testId}
+                    className='text-[13px]'
+                    disabled={item.disabled}
+                    onSelect={
+                      item.onSelect
+                        ? () => {
+                            void item.onSelect?.()
+                          }
+                        : undefined
+                    }
+                  >
+                    {item.label}
+                  </MenubarItem>
+                ),
+              )}
             </MenubarContent>
           </MenubarMenu>
         ))}
