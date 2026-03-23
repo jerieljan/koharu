@@ -517,7 +517,8 @@ export const useDocumentMutations = () => {
 
   const batchDetectAndOcr = useCallback(async () => {
     const { totalPages } = useEditorUiStore.getState()
-    const { startOperation, finishOperation } = useOperationStore.getState()
+    const { startOperation, finishOperation, isCancelled } =
+      useOperationStore.getState()
     if (!totalPages) return
     startOperation({
       type: 'process-all',
@@ -527,8 +528,18 @@ export const useDocumentMutations = () => {
     })
     try {
       for (let i = 0; i < totalPages; i++) {
+        if (isCancelled()) {
+          break
+        }
         await detect(undefined, i)
+        if (isCancelled()) {
+          break
+        }
         await ocr(undefined, i)
+        // Small delay to allow resource cleanup between images
+        if (i < totalPages - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 50))
+        }
       }
     } finally {
       finishOperation()
@@ -539,7 +550,8 @@ export const useDocumentMutations = () => {
   const batchGenerate = useCallback(async () => {
     const { totalPages } = useEditorUiStore.getState()
     const { selectedModel, selectedLanguage } = useLlmUiStore.getState()
-    const { startOperation, finishOperation } = useOperationStore.getState()
+    const { startOperation, finishOperation, isCancelled } =
+      useOperationStore.getState()
     if (!totalPages) return
     startOperation({
       type: 'process-all',
@@ -557,8 +569,15 @@ export const useDocumentMutations = () => {
             : languages[0]
           : undefined
       for (let i = 0; i < totalPages; i++) {
+        if (isCancelled()) {
+          break
+        }
         await api.llmGenerate(i, undefined, language)
         await invalidateCurrentDocument(queryClient, i)
+        // Small delay to allow resource cleanup between images
+        if (i < totalPages - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 50))
+        }
       }
     } finally {
       finishOperation()
@@ -568,7 +587,8 @@ export const useDocumentMutations = () => {
 
   const batchInpaintAndRender = useCallback(async () => {
     const { totalPages } = useEditorUiStore.getState()
-    const { startOperation, finishOperation } = useOperationStore.getState()
+    const { startOperation, finishOperation, isCancelled } =
+      useOperationStore.getState()
     if (!totalPages) return
     startOperation({
       type: 'process-all',
@@ -578,8 +598,19 @@ export const useDocumentMutations = () => {
     })
     try {
       for (let i = 0; i < totalPages; i++) {
+        if (isCancelled()) {
+          break
+        }
         await inpaint(undefined, i)
+        if (isCancelled()) {
+          break
+        }
         await render(undefined, i)
+        // Add a small delay between images to allow Metal resources to drain
+        // This prevents "Failed to create metal resource: Buffer" errors
+        if (i < totalPages - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
       }
     } finally {
       finishOperation()

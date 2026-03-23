@@ -9,10 +9,11 @@ type OperationStoreState = {
   updateOperation: (operation: Partial<OperationState>) => void
   finishOperation: () => void
   cancelOperation: () => void
+  isCancelled: () => boolean
   resetOperationState: () => void
 }
 
-export const useOperationStore = create<OperationStoreState>((set) => ({
+export const useOperationStore = create<OperationStoreState>((set, get) => ({
   operation: undefined,
   startOperation: (operation) =>
     set({
@@ -39,6 +40,10 @@ export const useOperationStore = create<OperationStoreState>((set) => ({
         ? { operation: { ...state.operation, cancelRequested: true } }
         : { operation: undefined },
     )
+  },
+  isCancelled: () => {
+    const state = get()
+    return state.operation?.cancelRequested ?? false
   },
   resetOperationState: () => set({ operation: undefined }),
 }))
