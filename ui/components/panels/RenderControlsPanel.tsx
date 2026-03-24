@@ -232,7 +232,9 @@ export function RenderControlsPanel() {
   const currentColorHex = colorToHex(currentColor)
   const currentStrokeColorHex = colorToHex(currentStroke.color)
   const currentStrokeWidth = currentStroke.widthPx ?? DEFAULT_STROKE_WIDTH
-  const fontLabel = t('render.fontLabel')
+  const fontLabelText = t('render.fontLabel')
+  const formatFontDisplayName = (font: FontFaceInfo) =>
+    font.postScriptName || font.familyName
   const effectLabel = t('render.effectLabel')
   const strokeLabel = t('render.effectBorder')
   const strokeColorLabel = t('render.strokeColorLabel')
@@ -360,7 +362,7 @@ export function RenderControlsPanel() {
 
       <div className='grid w-full min-w-0 grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-1.5'>
         <span className='text-muted-foreground text-[10px] font-medium tracking-wide uppercase'>
-          {fontLabel}
+          {fontLabelText}
         </span>
 
         <div className='flex min-w-0 items-center gap-1.5'>
@@ -408,7 +410,7 @@ export function RenderControlsPanel() {
                     style={{ fontFamily: font.familyName }}
                     data-testid={`render-font-option-${index}`}
                   >
-                    {font.familyName}
+                    {formatFontDisplayName(font)}
                   </SelectItem>
                 ))}
               </SelectContent>
