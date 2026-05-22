@@ -128,6 +128,18 @@ fn tw() -> usize {
     if w > 20 { w } else { 120 }
 }
 
+fn floor_char_boundary(s: &str, index: usize) -> usize {
+    if index >= s.len() {
+        s.len()
+    } else {
+        let mut i = index;
+        while !s.is_char_boundary(i) {
+            i -= 1;
+        }
+        i
+    }
+}
+
 fn truncate(s: &str, max: usize) -> String {
     if measure_text_width(s) <= max {
         return s.to_string();
@@ -135,7 +147,7 @@ fn truncate(s: &str, max: usize) -> String {
     if max <= 2 {
         return ".".repeat(max);
     }
-    let b = s.floor_char_boundary(max.saturating_sub(2));
+    let b = floor_char_boundary(s, max.saturating_sub(2));
     format!("{}..", &s[..b])
 }
 
